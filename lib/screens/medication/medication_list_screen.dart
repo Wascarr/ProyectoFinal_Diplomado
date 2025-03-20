@@ -17,12 +17,16 @@ class MedicationListScreen extends StatelessWidget {
         // Botón para agregar nuevo medicamento
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: () => _showAddMedicationDialog(context, provider),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
-            child: const Text('Agregar Medicamento'),
+            icon: const Icon(Icons.add),
+            label: const Text('Agregar Medicamento',
+                style: TextStyle(fontSize: 16)),
           ),
         ),
 
@@ -31,47 +35,155 @@ class MedicationListScreen extends StatelessWidget {
           child: provider.isLoading
               ? const Center(child: CircularProgressIndicator())
               : provider.medications.isEmpty
-                  ? const Center(child: Text('No hay medicamentos registrados'))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.medication,
+                            size: 80,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No hay medicamentos registrados',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: provider.medications.length,
                       itemBuilder: (context, index) {
                         final medication = provider.medications[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: ListTile(
-                            title: Text(medication.name),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            title: Text(
+                              medication.name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Dosis: ${medication.dosage}'),
-                                Text(
-                                    'Instrucciones: ${medication.instructions}'),
-                                Text('Doctor: ${medication.doctorName}'),
-                                if (medication.isActive)
-                                  const Text('Estado: Activo',
-                                      style: TextStyle(color: Colors.green))
-                                else
-                                  const Text('Estado: Inactivo',
-                                      style: TextStyle(color: Colors.red)),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.medical_services,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Dosis: ${medication.dosage}',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.8)),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Icon(Icons.info_outline,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'Instrucciones: ${medication.instructions}',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Icon(Icons.person,
+                                        size: 16, color: Colors.blue),
+                                    const SizedBox(width: 4),
+                                    Text('Doctor: ${medication.doctorName}'),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                medication.isActive
+                                    ? Row(
+                                        children: [
+                                          const Icon(Icons.check_circle,
+                                              size: 16, color: Colors.green),
+                                          const SizedBox(width: 4),
+                                          const Text('Estado: Activo',
+                                              style: TextStyle(
+                                                  color: Colors.green)),
+                                        ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          const Icon(Icons.cancel,
+                                              size: 16, color: Colors.red),
+                                          const SizedBox(width: 4),
+                                          const Text('Estado: Inactivo',
+                                              style:
+                                                  TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
                               ],
                             ),
-                            leading: const Icon(Icons.medication),
+                            leading: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.medication,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.edit),
+                                  icon: Icon(Icons.edit,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                   onPressed: () {
                                     _showEditMedicationDialog(
                                         context, provider, medication);
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete),
+                                  icon: Icon(Icons.delete,
+                                      color: Colors.red.shade300),
                                   onPressed: () {
                                     if (medication.id != null) {
-                                      provider.deleteMedication(medication.id!);
+                                      _showDeleteConfirmationDialog(
+                                        context,
+                                        'Eliminar medicamento',
+                                        '¿Estás seguro de que deseas eliminar este medicamento?',
+                                        () => provider
+                                            .deleteMedication(medication.id!),
+                                      );
                                     }
                                   },
                                 ),
@@ -112,18 +224,21 @@ class MedicationListScreen extends StatelessWidget {
                   labelText: 'Nombre del medicamento',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: doctorNameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del doctor',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: dosageController,
                 decoration: const InputDecoration(
                   labelText: 'Dosis',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: instructionsController,
                 decoration: const InputDecoration(
@@ -185,18 +300,21 @@ class MedicationListScreen extends StatelessWidget {
                   labelText: 'Nombre del medicamento',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: doctorNameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del doctor',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: dosageController,
                 decoration: const InputDecoration(
                   labelText: 'Dosis',
                 ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: instructionsController,
                 decoration: const InputDecoration(
@@ -235,6 +353,30 @@ class MedicationListScreen extends StatelessWidget {
               }
             },
             child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, String title,
+      String content, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              onConfirm();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

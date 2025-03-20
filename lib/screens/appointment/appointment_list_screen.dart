@@ -17,12 +17,15 @@ class AppointmentListScreen extends StatelessWidget {
         // Botón para agregar nueva cita
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: () => _showAddAppointmentDialog(context, provider),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
             ),
-            child: const Text('Agregar Cita'),
+            icon: const Icon(Icons.add),
+            label: const Text('Agregar Cita', style: TextStyle(fontSize: 16)),
           ),
         ),
 
@@ -31,15 +34,38 @@ class AppointmentListScreen extends StatelessWidget {
           child: provider.isLoading
               ? const Center(child: CircularProgressIndicator())
               : provider.appointments.isEmpty
-                  ? const Center(child: Text('No hay citas programadas'))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 80,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No hay citas programadas',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: provider.appointments.length,
                       itemBuilder: (context, index) {
                         final appointment = provider.appointments[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             title: Text(
                               appointment.title,
                               style: TextStyle(
@@ -47,47 +73,93 @@ class AppointmentListScreen extends StatelessWidget {
                                     ? TextDecoration.lineThrough
                                     : null,
                                 fontWeight: FontWeight.bold,
+                                color: appointment.isCompleted
+                                    ? Colors.grey
+                                    : Colors.black,
                               ),
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                    'Fecha: ${DateFormat('dd/MM/yyyy HH:mm').format(appointment.date)}'),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      DateFormat('dd/MM/yyyy HH:mm')
+                                          .format(appointment.date),
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.8)),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
                                 Text(appointment.description),
                               ],
                             ),
-                            leading: Checkbox(
-                              value: appointment.isCompleted,
-                              onChanged: (value) {
-                                if (value != null) {
-                                  final updatedAppointment = Appointment(
-                                    id: appointment.id,
-                                    title: appointment.title,
-                                    date: appointment.date,
-                                    description: appointment.description,
-                                    isCompleted: value,
-                                  );
-                                  provider.saveAppointment(updatedAppointment);
-                                }
-                              },
+                            leading: Container(
+                              decoration: BoxDecoration(
+                                color: appointment.isCompleted
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Checkbox(
+                                value: appointment.isCompleted,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    final updatedAppointment = Appointment(
+                                      id: appointment.id,
+                                      title: appointment.title,
+                                      date: appointment.date,
+                                      description: appointment.description,
+                                      isCompleted: value,
+                                    );
+                                    provider
+                                        .saveAppointment(updatedAppointment);
+                                  }
+                                },
+                                shape: const CircleBorder(),
+                                activeColor: Colors.green,
+                              ),
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.edit),
+                                  icon: Icon(Icons.edit,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                   onPressed: () {
                                     _showEditAppointmentDialog(
                                         context, provider, appointment);
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete),
+                                  icon: Icon(Icons.delete,
+                                      color: Colors.red.shade300),
                                   onPressed: () {
                                     if (appointment.id != null) {
-                                      provider
-                                          .deleteAppointment(appointment.id!);
+                                      _showDeleteConfirmationDialog(
+                                        context,
+                                        'Eliminar cita',
+                                        '¿Estás seguro de que deseas eliminar esta cita?',
+                                        () => provider
+                                            .deleteAppointment(appointment.id!),
+                                      );
                                     }
                                   },
                                 ),
@@ -130,6 +202,7 @@ class AppointmentListScreen extends StatelessWidget {
                       labelText: 'Título',
                     ),
                   ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(
@@ -233,6 +306,7 @@ class AppointmentListScreen extends StatelessWidget {
                       labelText: 'Título',
                     ),
                   ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(
@@ -309,6 +383,30 @@ class AppointmentListScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, String title,
+      String content, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              onConfirm();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

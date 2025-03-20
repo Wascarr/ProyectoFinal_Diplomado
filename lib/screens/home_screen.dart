@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/appointment_provider.dart';
+import '../providers/medication_provider.dart';
+import '../providers/medical_note_provider.dart';
 import '../services/appointment_service.dart';
 import '../services/medication_service.dart';
 import '../services/medical_note_service.dart';
@@ -7,10 +11,6 @@ import '../services/migration_service.dart';
 import 'appointment/appointment_list_screen.dart';
 import 'medication/medication_list_screen.dart';
 import 'medical_note/medical_note_list_screen.dart';
-// Importaciones para los formulario
-import './appointment/appointment_form_screen.dart';
-import './medication/medication_form_screen.dart';
-import './medical_note/medical_note_form_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -40,20 +40,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
+        elevation: 0,
         actions: [
           if (_selectedIndex ==
               2) // Solo mostrar en la pantalla de notas médicas
             IconButton(
               icon: const Icon(Icons.label),
               onPressed: () {
-                // Aquí iría la lógica para gestionar etiquetas
                 _showTagsDialog(context);
               },
+              tooltip: 'Gestionar etiquetas',
             ),
           IconButton(
             icon: const Icon(Icons.cloud_upload),
             onPressed:
                 _isMigrating ? null : () => _showMigrationDialog(context),
+            tooltip: 'Migrar datos a la nube',
           ),
         ],
       ),
@@ -65,47 +67,29 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Citas',
+            tooltip: 'Gestionar citas médicas',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.medication),
             label: 'Medicamentos',
+            tooltip: 'Gestionar medicamentos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.note),
             label: 'Notas',
+            tooltip: 'Gestionar notas médicas',
           ),
         ],
+        elevation: 8,
+        backgroundColor: Colors.white,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      /* floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Enfoque simplificado
-          Widget formScreen;
-
-          switch (_selectedIndex) {
-            case 0:
-              formScreen = const AppointmentFormScreen();
-              break;
-            case 1:
-              formScreen = const MedicationFormScreen();
-              break;
-            case 2:
-              formScreen = const MedicalNoteFormScreen();
-              break;
-            default:
-              formScreen = const AppointmentFormScreen();
-          }
-
-          // Usar pushReplacement en lugar de push
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => formScreen),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),*/
     );
   }
 
@@ -195,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showTagsDialog(BuildContext context) {
-    // Aquí iría la implementación del diálogo para gestionar etiquetas
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -284,44 +267,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// Estas clases son referencias a las pantallas de formulario
-// que deberían estar definidas en sus respectivos archivos
-class AppointmentFormScreen extends StatelessWidget {
-  const AppointmentFormScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nueva Cita')),
-      body: const Center(child: Text('Formulario de Cita')),
-    );
-  }
-}
-
-class MedicationFormScreen extends StatelessWidget {
-  const MedicationFormScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo Medicamento')),
-      body: const Center(child: Text('Formulario de Medicamento')),
-    );
-  }
-}
-
-class MedicalNoteFormScreen extends StatelessWidget {
-  const MedicalNoteFormScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nueva Nota')),
-      body: const Center(child: Text('Formulario de Nota Médica')),
     );
   }
 }
