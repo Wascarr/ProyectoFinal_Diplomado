@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "464064167681",
+    "project_id": "gestor-tratamientos-medi-2d9b6",
+    "storage_bucket": "gestor-tratamientos-medi-2d9b6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:464064167681:android:1f5b9ae6607f6b675aa500",
+        "android_client_info": {
+          "package_name": "com.example.gestor_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVvwKAAjOF_M306br9RvUqsZO5simz0kk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
